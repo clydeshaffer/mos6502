@@ -182,6 +182,10 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	instr.code = &mos6502::Op_CMP;
 	instr.cycles = 2;
 	InstrTable[0xC9] = instr;
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_WAI;
+	instr.cycles = 3;
+	InstrTable[0xCB] = instr;
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_CMP;
 	instr.cycles = 4;
@@ -621,6 +625,23 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	instr.cycles = 5;
 	InstrTable[0x99] = instr;
 
+	instr.addr = &mos6502::Addr_ZER;
+	instr.code = &mos6502::Op_STZ;
+	instr.cycles = 3;
+	InstrTable[0x64] = instr;
+	instr.addr = &mos6502::Addr_ZEX;
+	instr.code = &mos6502::Op_STZ;
+	instr.cycles = 4;
+	InstrTable[0x74] = instr;
+	instr.addr = &mos6502::Addr_ABS;
+	instr.code = &mos6502::Op_STZ;
+	instr.cycles = 4;
+	InstrTable[0x9C] = instr;
+	instr.addr = &mos6502::Addr_ABX;
+	instr.code = &mos6502::Op_STZ;
+	instr.cycles = 5;
+	InstrTable[0x9E] = instr;
+
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_STX;
 	instr.cycles = 4;
@@ -832,6 +853,7 @@ void mos6502::Reset()
 	status |= CONSTANT;
 
 	illegalOpcode = false;
+	waiting = false;
 
 	return;
 }
@@ -852,6 +874,7 @@ uint8_t mos6502::StackPop()
 
 void mos6502::IRQ()
 {
+	waiting = false;
 	if(!IF_INTERRUPT())
 	{
 		SET_BREAK(0);
@@ -866,6 +889,7 @@ void mos6502::IRQ()
 
 void mos6502::NMI()
 {
+	waiting = false;
 	SET_BREAK(0);
 	StackPush((pc >> 8) & 0xFF);
 	StackPush(pc & 0xFF);
@@ -883,7 +907,7 @@ void mos6502::Run(
 	uint8_t opcode;
 	Instr instr;
 
-	while(cyclesRemaining > 0 && !illegalOpcode)
+	while(cyclesRemaining > 0 && !illegalOpcode && !waiting)
 	{
 		// fetch
 		opcode = Read(pc++);
@@ -1050,6 +1074,11 @@ void mos6502::Op_BRK(uint16_t src)
 	SET_INTERRUPT(1);
 	pc = (Read(irqVectorH) << 8) + Read(irqVectorL);
 	return;
+}
+
+void mos6502::Op_WAI(uint16_t src)
+{
+
 }
 
 void mos6502::Op_BVC(uint16_t src)
@@ -1403,6 +1432,12 @@ void mos6502::Op_SEI(uint16_t src)
 void mos6502::Op_STA(uint16_t src)
 {
 	Write(src, A);
+	return;
+}
+
+void mos6502::Op_STZ(uint16_t src)
+{
+	Write(src, 0);
 	return;
 }
 

@@ -71,6 +71,7 @@ private:
 	void Exec(Instr i);
 
 	bool illegalOpcode;
+	bool waiting;
 
 	// addressing modes
 	uint16_t Addr_ACC(); // ACCUMULATOR
@@ -145,6 +146,7 @@ private:
 
 	void Op_SEI(uint16_t src);
 	void Op_STA(uint16_t src);
+	void Op_STZ(uint16_t src);
 	void Op_STX(uint16_t src);
 	void Op_STY(uint16_t src);
 	void Op_TAX(uint16_t src);
@@ -154,6 +156,8 @@ private:
 	void Op_TXA(uint16_t src);
 	void Op_TXS(uint16_t src);
 	void Op_TYA(uint16_t src);
+
+	void Op_WAI(uint16_t src);
 
 	void Op_ILLEGAL(uint16_t src);
 
