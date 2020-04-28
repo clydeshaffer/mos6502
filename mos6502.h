@@ -158,6 +158,7 @@ private:
 	void Op_TYA(uint16_t src);
 
 	void Op_WAI(uint16_t src);
+	void Op_STP(uint16_t src);
 
 	void Op_ILLEGAL(uint16_t src);
 
@@ -170,10 +171,12 @@ private:
 	static const uint16_t nmiVectorL = 0xFFFA;
 
 	// read/write callbacks
+	typedef void (*CPUEvent)(void);
 	typedef void (*BusWrite)(uint16_t, uint8_t);
 	typedef uint8_t (*BusRead)(uint16_t);
 	BusRead Read;
 	BusWrite Write;
+	CPUEvent Stopped;
 
 	// stack operations
 	inline void StackPush(uint8_t byte);
@@ -184,7 +187,7 @@ public:
 		INST_COUNT,
 		CYCLE_COUNT,
 	};
-	mos6502(BusRead r, BusWrite w);
+	mos6502(BusRead r, BusWrite w, CPUEvent stp);
 	void NMI();
 	void IRQ();
 	void Reset();

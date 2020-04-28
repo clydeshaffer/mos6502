@@ -1,10 +1,11 @@
 
 #include "mos6502.h"
 
-mos6502::mos6502(BusRead r, BusWrite w)
+mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 {
 	Write = (BusWrite)w;
 	Read = (BusRead)r;
+	Stopped = (CPUEvent)stp;
 	Instr instr;
 
 	// fill jump table with ILLEGALs
@@ -186,6 +187,10 @@ mos6502::mos6502(BusRead r, BusWrite w)
 	instr.code = &mos6502::Op_WAI;
 	instr.cycles = 3;
 	InstrTable[0xCB] = instr;
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_STP;
+	instr.cycles = 3;
+	InstrTable[0xDB] = instr;
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_CMP;
 	instr.cycles = 4;
@@ -1078,7 +1083,13 @@ void mos6502::Op_BRK(uint16_t src)
 
 void mos6502::Op_WAI(uint16_t src)
 {
+	waiting = true;
+}
 
+void mos6502::Op_STP(uint16_t src)
+{
+	illegalOpcode = true;
+	Stopped();
 }
 
 void mos6502::Op_BVC(uint16_t src)
