@@ -492,6 +492,16 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	InstrTable[0x08] = instr;
 
 	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_PHX;
+	instr.cycles = 3;
+	InstrTable[0xDA] = instr;
+
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_PHY;
+	instr.cycles = 3;
+	InstrTable[0x5A] = instr;
+
+	instr.addr = &mos6502::Addr_IMP;
 	instr.code = &mos6502::Op_PLA;
 	instr.cycles = 4;
 	InstrTable[0x68] = instr;
@@ -500,6 +510,16 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_PLP;
 	instr.cycles = 4;
 	InstrTable[0x28] = instr;
+
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_PLX;
+	instr.cycles = 4;
+	InstrTable[0xFA] = instr;
+
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_PLY;
+	instr.cycles = 4;
+	InstrTable[0x7A] = instr;
 
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_ROL;
@@ -1310,6 +1330,18 @@ void mos6502::Op_PHP(uint16_t src)
 	return;
 }
 
+void mos6502::Op_PHX(uint16_t src)
+{
+	StackPush(X);
+	return;
+}
+
+void mos6502::Op_PHY(uint16_t src)
+{
+	StackPush(Y);
+	return;
+}
+
 void mos6502::Op_PLA(uint16_t src)
 {
 	A = StackPop();
@@ -1322,6 +1354,22 @@ void mos6502::Op_PLP(uint16_t src)
 {
 	status = StackPop();
 	SET_CONSTANT(1);
+	return;
+}
+
+void mos6502::Op_PLX(uint16_t src)
+{
+	X = StackPop();
+	SET_NEGATIVE(X & 0x80);
+	SET_ZERO(!X);
+	return;
+}
+
+void mos6502::Op_PLY(uint16_t src)
+{
+	Y = StackPop();
+	SET_NEGATIVE(Y & 0x80);
+	SET_ZERO(!Y);
 	return;
 }
 

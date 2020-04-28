@@ -133,8 +133,12 @@ private:
 
 	void Op_PHA(uint16_t src);
 	void Op_PHP(uint16_t src);
+	void Op_PHX(uint16_t src);
+	void Op_PHY(uint16_t src);
 	void Op_PLA(uint16_t src);
 	void Op_PLP(uint16_t src);
+	void Op_PLX(uint16_t src);
+	void Op_PLY(uint16_t src);
 	void Op_ROL(uint16_t src); 	void Op_ROL_ACC(uint16_t src);
 
 	void Op_ROR(uint16_t src);	void Op_ROR_ACC(uint16_t src);
