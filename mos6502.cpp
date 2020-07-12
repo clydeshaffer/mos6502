@@ -7,6 +7,7 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	Read = (BusRead)r;
 	Stopped = (CPUEvent)stp;
 	Instr instr;
+	irq_timer = 0;
 
 	// fill jump table with ILLEGALs
 	instr.addr = &mos6502::Addr_IMP;
@@ -912,6 +913,10 @@ void mos6502::IRQ()
 	return;
 }
 
+void mos6502::ScheduleIRQ(uint32_t cycles) {
+	irq_timer = cycles;
+}
+
 void mos6502::NMI()
 {
 	waiting = false;
@@ -932,8 +937,18 @@ void mos6502::Run(
 	uint8_t opcode;
 	Instr instr;
 
-	while(cyclesRemaining > 0 && !illegalOpcode && !waiting)
+	while(cyclesRemaining > 0 && !illegalOpcode)
 	{
+		if(waiting) {
+			if(irq_timer > 0) {
+				cycleCount += irq_timer;
+				cyclesRemaining -= irq_timer;
+				irq_timer = 0;
+				IRQ();
+			} else {
+				break;
+			}
+		}
 		// fetch
 		opcode = Read(pc++);
 
@@ -946,6 +961,16 @@ void mos6502::Run(
 		cyclesRemaining -=
 			cycleMethod == CYCLE_COUNT        ? instr.cycles
 			/* cycleMethod == INST_COUNT */   : 1;
+		if(irq_timer > 0) {
+			if(irq_timer < instr.cycles) {
+				irq_timer = 0;
+			} else {
+				irq_timer -= instr.cycles;
+			}
+			if(irq_timer == 0) {
+				IRQ();
+			}
+		}
 	}
 }
 

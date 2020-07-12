@@ -186,6 +186,8 @@ private:
 	inline void StackPush(uint8_t byte);
 	inline uint8_t StackPop();
 
+	uint32_t irq_timer;
+
 public:
 	enum CycleMethod {
 		INST_COUNT,
@@ -194,6 +196,7 @@ public:
 	mos6502(BusRead r, BusWrite w, CPUEvent stp);
 	void NMI();
 	void IRQ();
+	void ScheduleIRQ(uint32_t cycles);
 	void Reset();
 	void Run(
 		int32_t cycles,
