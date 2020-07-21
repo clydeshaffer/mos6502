@@ -121,6 +121,11 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.cycles = 2;
 	InstrTable[0xF0] = instr;
 
+	instr.addr = &mos6502::Addr_REL;
+	instr.code = &mos6502::Op_BRA;
+	instr.cycles = 3;
+	InstrTable[0x80] = instr;
+
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_BIT;
 	instr.cycles = 4;
@@ -1585,5 +1590,11 @@ void mos6502::Op_TYA(uint16_t src)
 	SET_NEGATIVE(m & 0x80);
 	SET_ZERO(!m);
 	A = m;
+	return;
+}
+
+void mos6502::Op_BRA(uint16_t src)
+{
+	pc = src;
 	return;
 }
