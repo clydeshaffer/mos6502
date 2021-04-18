@@ -42,19 +42,7 @@ using namespace std;
 class mos6502
 {
 private:
-	// registers
-	uint8_t A; // accumulator
-	uint8_t X; // X-index
-	uint8_t Y; // Y-index
-
-	// stack pointer
-	uint8_t sp;
-
-	// program counter
-	uint16_t pc;
-
-	// status register
-	uint8_t status;
+	
 
 	typedef void (mos6502::*CodeExec)(uint16_t);
 	typedef uint16_t (mos6502::*AddrExec)();
@@ -70,9 +58,6 @@ private:
 
 	void Exec(Instr i);
 
-	bool illegalOpcode;
-	bool waiting;
-
 	// addressing modes
 	uint16_t Addr_ACC(); // ACCUMULATOR
 	uint16_t Addr_IMM(); // IMMEDIATE
@@ -87,6 +72,7 @@ private:
 	uint16_t Addr_INX(); // INDEXED-X INDIRECT
 	uint16_t Addr_INY(); // INDEXED-Y INDIRECT
 	uint16_t Addr_ABI(); // ABSOLUTE INDIRECT
+	uint16_t Addr_ZPI(); // ZERO PAGE INDIRECT
 
 	// opcodes (grouped as per datasheet)
 	void Op_ADC(uint16_t src);
@@ -113,11 +99,11 @@ private:
 	void Op_CPX(uint16_t src);
 	void Op_CPY(uint16_t src);
 
-	void Op_DEC(uint16_t src);
+	void Op_DEC(uint16_t src);	void Op_DEC_ACC(uint16_t src);
 	void Op_DEX(uint16_t src);
 	void Op_DEY(uint16_t src);
 	void Op_EOR(uint16_t src);
-	void Op_INC(uint16_t src);
+	void Op_INC(uint16_t src);	void Op_INC_ACC(uint16_t src);
 
 	void Op_INX(uint16_t src);
 	void Op_INY(uint16_t src);
@@ -191,6 +177,24 @@ private:
 	uint32_t irq_timer;
 
 public:
+	bool illegalOpcode;
+	bool waiting;
+	uint16_t illegalOpcodeSrc;
+
+	// registers
+	uint8_t A; // accumulator
+	uint8_t X; // X-index
+	uint8_t Y; // Y-index
+
+	// stack pointer
+	uint8_t sp;
+
+	// program counter
+	uint16_t pc;
+
+	// status register
+	uint8_t status;
+	
 	enum CycleMethod {
 		INST_COUNT,
 		CYCLE_COUNT,

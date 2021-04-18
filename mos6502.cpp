@@ -51,6 +51,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_ADC;
 	instr.cycles = 4;
 	InstrTable[0x79] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_ADC;
+	instr.cycles = 6;
+	InstrTable[0x72] = instr;
 
 	instr.addr = &mos6502::Addr_IMM;
 	instr.code = &mos6502::Op_AND;
@@ -84,6 +88,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_AND;
 	instr.cycles = 4;
 	InstrTable[0x39] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_AND;
+	instr.cycles = 5;
+	InstrTable[0x32] = instr;
 
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_ASL;
@@ -225,6 +233,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_CMP;
 	instr.cycles = 4;
 	InstrTable[0xD9] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_CMP;
+	instr.cycles = 5;
+	InstrTable[0xD2] = instr;
 
 	instr.addr = &mos6502::Addr_IMM;
 	instr.code = &mos6502::Op_CPX;
@@ -252,6 +264,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.cycles = 3;
 	InstrTable[0xC4] = instr;
 
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_DEC_ACC;
+	instr.cycles = 2;
+	InstrTable[0x3A] = instr;
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_DEC;
 	instr.cycles = 6;
@@ -311,7 +327,15 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_EOR;
 	instr.cycles = 4;
 	InstrTable[0x59] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_EOR;
+	instr.cycles = 5;
+	InstrTable[0x52] = instr;
 
+	instr.addr = &mos6502::Addr_IMP;
+	instr.code = &mos6502::Op_INC_ACC;
+	instr.cycles = 2;
+	InstrTable[0x1A] = instr;
 	instr.addr = &mos6502::Addr_ABS;
 	instr.code = &mos6502::Op_INC;
 	instr.cycles = 6;
@@ -385,6 +409,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_LDA;
 	instr.cycles = 4;
 	InstrTable[0xB9] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_LDA;
+	instr.cycles = 5;
+	InstrTable[0xB2] = instr;
 
 	instr.addr = &mos6502::Addr_IMM;
 	instr.code = &mos6502::Op_LDX;
@@ -486,6 +514,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_ORA;
 	instr.cycles = 4;
 	InstrTable[0x19] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_ORA;
+	instr.cycles = 5;
+	InstrTable[0x12] = instr;
 
 	instr.addr = &mos6502::Addr_IMP;
 	instr.code = &mos6502::Op_PHA;
@@ -611,6 +643,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_SBC;
 	instr.cycles = 4;
 	InstrTable[0xF9] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_SBC;
+	instr.cycles = 5;
+	InstrTable[0xF2] = instr;
 
 	instr.addr = &mos6502::Addr_IMP;
 	instr.code = &mos6502::Op_SEC;
@@ -655,6 +691,10 @@ mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
 	instr.code = &mos6502::Op_STA;
 	instr.cycles = 5;
 	InstrTable[0x99] = instr;
+	instr.addr = &mos6502::Addr_ZPI;
+	instr.code = &mos6502::Op_STA;
+	instr.cycles = 5;
+	InstrTable[0x92] = instr;
 
 	instr.addr = &mos6502::Addr_ZER;
 	instr.code = &mos6502::Op_STZ;
@@ -871,6 +911,19 @@ uint16_t mos6502::Addr_INY()
 	return addr;
 }
 
+uint16_t mos6502::Addr_ZPI()
+{
+	uint16_t zeroL;
+	uint16_t zeroH;
+	uint16_t addr;
+
+	zeroL = Read(pc++);
+	zeroH = (zeroL + 1) % 256;
+	addr = Read(zeroL) + (Read(zeroH) << 8);
+
+	return addr;
+}
+
 void mos6502::Reset()
 {
 	A = 0x00;
@@ -962,6 +1015,9 @@ void mos6502::Run(
 
 		// execute
 		Exec(instr);
+		if(illegalOpcode) {
+			illegalOpcodeSrc = opcode;
+		}
 		cycleCount += instr.cycles;
 		cyclesRemaining -=
 			cycleMethod == CYCLE_COUNT        ? instr.cycles
@@ -1221,6 +1277,16 @@ void mos6502::Op_DEC(uint16_t src)
 	return;
 }
 
+void mos6502::Op_DEC_ACC(uint16_t src)
+{
+	uint8_t m = A;
+	m = (m - 1) % 256;
+	SET_NEGATIVE(m & 0x80);
+	SET_ZERO(!m);
+	A = m;
+	return;
+}
+
 void mos6502::Op_DEX(uint16_t src)
 {
 	uint8_t m = X;
@@ -1257,6 +1323,15 @@ void mos6502::Op_INC(uint16_t src)
 	SET_NEGATIVE(m & 0x80);
 	SET_ZERO(!m);
 	Write(src, m);
+}
+
+void mos6502::Op_INC_ACC(uint16_t src)
+{
+	uint8_t m = A;
+	m = (m + 1) % 256;
+	SET_NEGATIVE(m & 0x80);
+	SET_ZERO(!m);
+	A = m;
 }
 
 void mos6502::Op_INX(uint16_t src)
