@@ -958,6 +958,7 @@ uint8_t mos6502::StackPop()
 
 void mos6502::IRQ()
 {
+	irq_line = true;
 	waiting = false;
 	if(!IF_INTERRUPT())
 	{
@@ -973,6 +974,13 @@ void mos6502::IRQ()
 
 void mos6502::ScheduleIRQ(uint32_t cycles) {
 	irq_timer = cycles;
+	if(cycles == 0) {
+		IRQ();
+	}
+}
+
+void mos6502::ClearIRQ() {
+	irq_line = false;
 }
 
 void mos6502::NMI()
@@ -998,10 +1006,13 @@ void mos6502::Run(
 	while(cyclesRemaining > 0 && !illegalOpcode)
 	{
 		if(waiting) {
-			if(irq_timer > 0) {
+			if(irq_line) {
+				waiting = false;
+			} else if(irq_timer > 0) {
 				cycleCount += irq_timer;
 				cyclesRemaining -= irq_timer;
 				irq_timer = 0;
+				irq_line = true;
 				IRQ();
 			} else {
 				break;

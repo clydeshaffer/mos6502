@@ -175,6 +175,7 @@ private:
 	inline uint8_t StackPop();
 
 	uint32_t irq_timer;
+	bool irq_line = false;
 
 public:
 	bool illegalOpcode;
@@ -203,6 +204,7 @@ public:
 	void NMI();
 	void IRQ();
 	void ScheduleIRQ(uint32_t cycles);
+	void ClearIRQ();
 	void Reset();
 	void Run(
 		int32_t cycles,
