@@ -981,6 +981,7 @@ void mos6502::ScheduleIRQ(uint32_t cycles) {
 
 void mos6502::ClearIRQ() {
 	irq_line = false;
+	irq_timer = 0;
 }
 
 void mos6502::NMI()
@@ -1008,6 +1009,7 @@ void mos6502::Run(
 		if(waiting) {
 			if(irq_line) {
 				waiting = false;
+				IRQ();
 			} else if(irq_timer > 0) {
 				cycleCount += irq_timer;
 				cyclesRemaining -= irq_timer;
@@ -1017,6 +1019,8 @@ void mos6502::Run(
 			} else {
 				break;
 			}
+		} else if(irq_line) {
+			IRQ();
 		}
 		// fetch
 		opcode = Read(pc++);
@@ -1036,6 +1040,7 @@ void mos6502::Run(
 		if(irq_timer > 0) {
 			if(irq_timer < instr.cycles) {
 				irq_timer = 0;
+				IRQ();
 			} else {
 				irq_timer -= instr.cycles;
 			}
