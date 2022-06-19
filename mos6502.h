@@ -169,6 +169,7 @@ private:
 	BusRead Read;
 	BusWrite Write;
 	CPUEvent Stopped;
+	BusRead Sync;
 
 	// stack operations
 	inline void StackPush(uint8_t byte);
@@ -200,7 +201,7 @@ public:
 		INST_COUNT,
 		CYCLE_COUNT,
 	};
-	mos6502(BusRead r, BusWrite w, CPUEvent stp);
+	mos6502(BusRead r, BusWrite w, CPUEvent stp, BusRead sync = NULL);
 	void NMI();
 	void IRQ();
 	void ScheduleIRQ(uint32_t cycles);

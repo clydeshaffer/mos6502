@@ -1,11 +1,12 @@
 
 #include "mos6502.h"
 
-mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp)
+mos6502::mos6502(BusRead r, BusWrite w, CPUEvent stp, BusRead sync)
 {
 	Write = (BusWrite)w;
 	Read = (BusRead)r;
 	Stopped = (CPUEvent)stp;
+	Sync = (BusRead)sync;
 	Instr instr;
 	irq_timer = 0;
 
@@ -1023,7 +1024,12 @@ void mos6502::Run(
 			IRQ();
 		}
 		// fetch
-		opcode = Read(pc++);
+		if(Sync == NULL) {
+			opcode = Read(pc++);
+		} else {
+			opcode = Sync(pc++);
+		}
+		
 
 		// decode
 		instr = InstrTable[opcode];
